@@ -31,7 +31,6 @@ func main() {
 	}()
 
 	router := chi.NewRouter()
-
 	articles.NewServer(router)
 
 	logrus.Fatal(http.ListenAndServe(":4007", router))
