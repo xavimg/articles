@@ -5,27 +5,24 @@ import (
 	"log"
 
 	"github.com/sirupsen/logrus"
+	"github.com/xavimg/articles/internal/config"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-const (
-	mongoURL = "mongodb://mongo:27017"
-)
-
 var Repo *Database
 
 func ConnectRepo(ctx context.Context) error {
-	c, err := mongo.Connect(context.Background(), options.Client().ApplyURI(mongoURL))
+	c, err := mongo.Connect(context.Background(), options.Client().ApplyURI(config.Settings.Mongo.URL))
 	if err != nil {
 		logrus.Errorf("Error connecting: %s\n", err)
 		return err
 	}
 
 	Repo = &Database{
-		mongo: c.Database("articles"),
+		mongo: c.Database(config.Settings.Mongo.Database),
 	}
 
 	logrus.Info("Connected to mongo!")
@@ -38,7 +35,7 @@ type Database struct {
 }
 
 func (repo *Database) Articles() *mongo.Collection {
-	return repo.mongo.Collection("articles")
+	return repo.mongo.Collection(config.Settings.Mongo.Collection)
 }
 
 func (repo *Database) GetAll(ctx context.Context) ([]*Article, error) {

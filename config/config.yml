@@ -1,0 +1,7 @@
+api:
+  port: 4007
+
+mongo:
+  url: mongodb://mongo:27017
+  database: articles
+  collection: articles

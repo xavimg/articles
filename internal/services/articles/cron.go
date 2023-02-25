@@ -13,6 +13,7 @@ import (
 )
 
 const (
+	scheme       = "https"
 	host         = "www.wearehullcity.co.uk"
 	endpointList = "/api/incrowd/getnewlistinformation"
 	endpointOne  = "/api/incrowd/getnewsarticleinformation"
@@ -22,9 +23,9 @@ func PollingNews() {
 	logrus.Info("New polling at %v", time.Now())
 
 	params := url.Values{}
-	params.Add("count", "5") // He de hardcoldearlo porque nose como hacero dinámico
+	params.Add("count", "50") // Im using 50 es the example in drive.
 	url := &url.URL{
-		Scheme:   "https",
+		Scheme:   scheme,
 		Host:     host,
 		Path:     endpointList,
 		RawQuery: params.Encode(),
@@ -32,49 +33,55 @@ func PollingNews() {
 
 	res, err := http.Get(url.String())
 	if err != nil {
-		logrus.Printf("Error %s", err)
+		logrus.Errorf("error %s", err)
 		return
 	}
 
-	resByte, err := io.ReadAll(res.Body)
+	resBytes, err := io.ReadAll(res.Body)
 	if err != nil {
-		logrus.Printf("Error %s", err)
+		logrus.Errorf("eror %s", err)
 		return
 	}
 	defer res.Body.Close()
 
 	var providerData DataXML
-	if err := xml.Unmarshal(resByte, &providerData); err != nil {
-		logrus.Printf("Error %s", err)
+	if err := xml.Unmarshal(resBytes, &providerData); err != nil {
+		logrus.Errorf("error %s", err)
 		return
 	}
 
-	var article *models.Article
-	var articles []*models.Article
-	for _, item := range providerData.NewsletterNewsItems.NewsletterNewsItem {
-		article = &models.Article{
-			ArticleURL:        item.ArticleURL,
-			NewsArticleID:     item.NewsArticleID,
-			PublishDate:       item.PublishDate,
-			Taxonomies:        item.Taxonomies,
-			TeaserText:        item.TeaserText,
-			ThumbnailImageURL: item.ThumbnailImageURL,
-			Title:             item.Title,
-			OptaMatchId:       item.OptaMatchId,
-			LastUpdateDate:    item.LastUpdateDate,
-			IsPublished:       item.IsPublished,
-		}
-
-		articles = append(articles, article)
-	}
+	articles := DeserializeXML(providerData)
 
 	go func() error {
 		if err := models.Repo.InsertManyTask(context.Background(), articles); err != nil {
-			logrus.Println(err)
+			logrus.Errorf("error %s", err)
 			return err
 		}
 		return nil
 	}()
 
 	return
+}
+
+func DeserializeXML(providerData DataXML) []*models.Article {
+	var article *models.Article
+	var articles []*models.Article
+
+	for _, xml := range providerData.NewsletterNewsItems.NewsletterNewsItem {
+		article = &models.Article{
+			ArticleURL:        xml.ArticleURL,
+			NewsArticleID:     xml.NewsArticleID,
+			PublishDate:       xml.PublishDate,
+			Taxonomies:        xml.Taxonomies,
+			TeaserText:        xml.TeaserText,
+			ThumbnailImageURL: xml.ThumbnailImageURL,
+			Title:             xml.Title,
+			OptaMatchId:       xml.OptaMatchId,
+			LastUpdateDate:    xml.LastUpdateDate,
+			IsPublished:       xml.IsPublished,
+		}
+		articles = append(articles, article)
+	}
+
+	return articles
 }
