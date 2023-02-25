@@ -2,8 +2,6 @@ package articles_repo
 
 import (
 	"context"
-	"fmt"
-	"log"
 
 	"github.com/sirupsen/logrus"
 	"github.com/xavimg/articles/internal/models"
@@ -19,35 +17,29 @@ func NewRepository(db *mongo.Database) *ArticleRepository {
 	return &ArticleRepository{db: db}
 }
 
-func (as *ArticleRepository) InsertMany(ctx context.Context, articles []models.Article) error {
+func (as *ArticleRepository) InsertMany(ctx context.Context, articles []*models.Article) error {
 	var articlesToInsert []interface{}
-	for _, article := range articles {
-		articlesToInsert = append(articlesToInsert, article)
-	}
+	articlesToInsert = append(articlesToInsert, articles)
 
-	collection := as.db.Collection("articles")
-
-	_, err := collection.InsertMany(ctx, articlesToInsert)
-	if err != nil {
-		logrus.Println(err)
+	if _, err := models.Repo.Articles().InsertMany(ctx, articlesToInsert); err != nil {
+		logrus.Error(err)
+		return err
 	}
 	return nil
 }
 
 func (as *ArticleRepository) InsertOne(ctx context.Context, article *models.Article) error {
-	collection := as.db.Collection("articles")
-
-	_, err := collection.InsertOne(ctx, article)
-	if err != nil {
-		logrus.Println(err)
+	if _, err := models.Repo.Articles().InsertOne(ctx, article); err != nil {
+		logrus.Error(err)
+		return err
 	}
 	return nil
 }
 
 func (as *ArticleRepository) GetAll(ctx context.Context) ([]models.Article, error) {
-	cursor, err := as.db.Collection("articles").Find(ctx, map[string]any{})
+	cursor, err := models.Repo.Articles().Find(ctx, map[string]any{})
 	if err != nil {
-		logrus.Println("error: ", err)
+		logrus.Error(err)
 		return nil, err
 	}
 	defer cursor.Close(ctx)
@@ -56,13 +48,15 @@ func (as *ArticleRepository) GetAll(ctx context.Context) ([]models.Article, erro
 	for cursor.Next(context.Background()) {
 		var article models.Article
 		if err := cursor.Decode(&article); err != nil {
-			log.Fatal(err)
+			logrus.Error(err)
+			return nil, err
 		}
 		articles = append(articles, article)
-		fmt.Println(article)
 	}
+
 	if err := cursor.Err(); err != nil {
-		log.Fatal(err)
+		logrus.Error(err)
+		return nil, err
 	}
 
 	return articles, nil
@@ -70,8 +64,9 @@ func (as *ArticleRepository) GetAll(ctx context.Context) ([]models.Article, erro
 
 func (as *ArticleRepository) GetByID(ctx context.Context, id string) (*models.Article, error) {
 	var article *models.Article
-	if err := as.db.Collection("articles").FindOne(ctx, bson.M{"_id": id}).Decode(&article); err != nil {
-		log.Fatal(err)
+	if err := models.Repo.Articles().FindOne(ctx, bson.M{"_id": id}).Decode(&article); err != nil {
+		logrus.Error(err)
+		return nil, err
 	}
 	return article, nil
 }

@@ -1,4 +1,4 @@
-package articles_handlers
+package articles
 
 type ArticlesJSON struct {
 	Status string    `json:"status"`
