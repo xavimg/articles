@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"encoding/xml"
+	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -12,7 +13,6 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/xavimg/articles/internal/models"
 	"github.com/xavimg/articles/internal/repo"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 const (
@@ -41,47 +41,67 @@ func (s *Server) Run() {
 }
 
 func (ah *Server) All(w http.ResponseWriter, r *http.Request) error {
-	count := chi.URLParam(r, "count")
-
+	// count := chi.URLParam(r, "count")
+	fmt.Println("xd")
 	// Fetch coming from provider-feed.
-	providerArticles, err := providerArticles(count)
+	// providerArticles, err := providerArticles(count)
+	// if err != nil {
+	// Alternative fetch if our provider-feed fails.
+	savedArticles, err := ah.repo.GetAll(context.Background())
 	if err != nil {
-		// Alternative fetch if our provider-feed fails.
-		savedArticles, err := ah.repo.GetAll(context.Background())
-		if err != nil {
-			logrus.Printf("err %s\n", err)
-			return err
+		logrus.Printf("err %s\n", err)
+		return err
+	}
+	logrus.Println(err)
+	// return writeJSON(w, http.StatusOK, savedArticles)
+	// }
+
+	// insertArticles := []models.Article{}
+	// for _, article := range providerArticles.Data {
+	// 	insertArticles = append(insertArticles, models.Article{
+	// 		ID:                primitive.NewObjectID(),
+	// 		ArticleURL:        article.ArticleURL,
+	// 		NewsArticleID:     article.NewsArticleID,
+	// 		PublishDate:       article.PublishDate,
+	// 		Taxonomies:        article.Taxonomies,
+	// 		TeaserText:        article.TeaserText,
+	// 		ThumbnailImageURL: article.ThumbnailImageURL,
+	// 		Title:             article.Title,
+	// 		OptaMatchId:       article.OptaMatchId,
+	// 		LastUpdateDate:    article.LastUpdateDate,
+	// 		IsPublished:       article.IsPublished,
+	// 	})
+	// }
+
+	// go func() error {
+	// 	if err := ah.repo.InsertMany(context.Background(), insertArticles); err != nil {
+	// 		logrus.Println(err)
+	// 		return err
+	// 	}
+	// 	return nil
+	// }()
+
+	var resp ArticleJSON
+	for _, article := range savedArticles {
+		resp = ArticleJSON{
+			Status: "succes",
+			Data: Article{
+				ArticleURL:        article.ArticleURL,
+				NewsArticleID:     article.NewsArticleID,
+				PublishDate:       article.PublishDate,
+				Taxonomies:        article.Taxonomies,
+				TeaserText:        article.TeaserText,
+				ThumbnailImageURL: article.ThumbnailImageURL,
+				Title:             article.Title,
+				OptaMatchId:       article.OptaMatchId,
+				LastUpdateDate:    article.LastUpdateDate,
+				IsPublished:       article.IsPublished,
+			},
 		}
-		logrus.Println(err)
-		return writeJSON(w, http.StatusOK, savedArticles)
+
 	}
 
-	insertArticles := []models.Article{}
-	for _, article := range providerArticles.Data {
-		insertArticles = append(insertArticles, models.Article{
-			ID:                primitive.NewObjectID(),
-			ArticleURL:        article.ArticleURL,
-			NewsArticleID:     article.NewsArticleID,
-			PublishDate:       article.PublishDate,
-			Taxonomies:        article.Taxonomies,
-			TeaserText:        article.TeaserText,
-			ThumbnailImageURL: article.ThumbnailImageURL,
-			Title:             article.Title,
-			OptaMatchId:       article.OptaMatchId,
-			LastUpdateDate:    article.LastUpdateDate,
-			IsPublished:       article.IsPublished,
-		})
-	}
-
-	go func() error {
-		if err := ah.repo.InsertMany(context.Background(), insertArticles); err != nil {
-			logrus.Println(err)
-			return err
-		}
-		return nil
-	}()
-
-	return writeJSON(w, http.StatusOK, providerArticles)
+	return writeJSON(w, http.StatusOK, resp)
 }
 
 func (ah *Server) ByID(w http.ResponseWriter, r *http.Request) error {

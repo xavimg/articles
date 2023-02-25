@@ -22,20 +22,22 @@ func (as *ArticleRepository) InsertMany(ctx context.Context, articles []models.A
 		articlesToInsert = append(articlesToInsert, article)
 	}
 
-	_, err := as.db.Collection("articles").InsertMany(ctx, articlesToInsert)
+	collection := as.db.Collection("articles")
+
+	_, err := collection.InsertMany(ctx, articlesToInsert)
 	if err != nil {
 		logrus.Println(err)
 	}
 	return nil
 }
 
-func (as *ArticleRepository) GetAll(ctx context.Context) ([]*models.Article, error) {
+func (as *ArticleRepository) GetAll(ctx context.Context) ([]models.Article, error) {
 	cursor, err := as.db.Collection("articles").Find(ctx, map[string]any{})
 	if err != nil {
 		return nil, err
 	}
 
-	articles := []*models.Article{}
+	articles := make([]models.Article, 0, 10)
 	if err := cursor.All(ctx, articles); err != nil {
 		return nil, err
 	}
