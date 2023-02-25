@@ -7,11 +7,8 @@ To address this, I implemented a cronjob that runs every 10 minutes, which perio
 
 The importance of this approach is illustrated by the example of Leo Messi returning to FC Barcelona. If our cron job is set to run every 30 min or 2 hours, there is a possibility that the news about Messi's return might not appear in our database, which would impact badly in our traffic and customer experience, and we dont want that in incrowd. To avoid this, we need to periodically update our database with fresh data from the provider feed API.
 
-Overall, I believe that the approach I took to the technical test strikes a balance between efficiency, freshness, and customer satisfaction, and will be effective in meeting the needs of your business.
-
-Thank you for the opportunity to complete your technical test. If you have any further questions or concerns, please do not hesitate to contact me.
+Overall, I believe that the approach I took to the technical test strikes a balance between efficiency, freshness, and customer satisfaction, and will be effective in meeting the needs of business.
  
-
 ## Authors
 
 - [@xavimg](https://github.com/xavimg)
