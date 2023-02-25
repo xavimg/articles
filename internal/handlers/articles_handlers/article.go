@@ -40,36 +40,6 @@ func (s *Server) Run() {
 	http.ListenAndServe(s.listenAddr, router)
 }
 
-func (ah *Server) ByID(w http.ResponseWriter, r *http.Request) error {
-	count := chi.URLParam(r, "count")
-
-	// Show which come from feed provider.
-	var articles []Article
-	providerArticles, err := providerArticles(count)
-	if err != nil {
-		repoArticles, err := ah.repo.GetAll(context.Background())
-		if err != nil {
-			return err
-		}
-		for _, article := range repoArticles {
-			articles = append(articles, Article{
-				ArticleURL:    article.ArticleURL,
-				NewsArticleID: article.NewsArticleID,
-			})
-		}
-	}
-
-	// ah.store.Insert()
-
-	providerArticles.Status = "Succes"
-	providerArticles.Data = articles
-	// response := {
-	// 	Status: "succes",
-	// 	Data:   articles,
-	// }
-	return writeJSON(w, http.StatusOK, providerArticles)
-}
-
 func (ah *Server) All(w http.ResponseWriter, r *http.Request) error {
 	count := chi.URLParam(r, "count")
 
@@ -112,6 +82,47 @@ func (ah *Server) All(w http.ResponseWriter, r *http.Request) error {
 	}()
 
 	return writeJSON(w, http.StatusOK, providerArticles)
+}
+
+func (ah *Server) ByID(w http.ResponseWriter, r *http.Request) error {
+	count := chi.URLParam(r, "count")
+
+	// Show which come from feed provider.
+	var articles []Article
+	providerArticles, err := providerArticles(count)
+	if err != nil {
+		repoArticles, err := ah.repo.GetAll(context.Background())
+		if err != nil {
+			return err
+		}
+		for _, article := range repoArticles {
+			articles = append(articles, Article{
+				ArticleURL:    article.ArticleURL,
+				NewsArticleID: article.NewsArticleID,
+			})
+		}
+	}
+
+	// ah.store.Insert()
+
+	providerArticles.Status = "Succes"
+	providerArticles.Data = articles
+	// response := {
+	// 	Status: "succes",
+	// 	Data:   articles,
+	// }
+	return writeJSON(w, http.StatusOK, providerArticles)
+}
+
+type apiFunc func(http.ResponseWriter, *http.Request) error
+
+func makeHTTPHandleFunc(f apiFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if err := f(w, r); err != nil {
+			logrus.Println("xd")
+			writeJSON(w, http.StatusBadRequest, ApiError{Error: err.Error()})
+		}
+	}
 }
 
 func writeJSON(w http.ResponseWriter, status int, v any) error {

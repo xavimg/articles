@@ -1,12 +1,5 @@
 package articles_handlers
 
-import (
-	"fmt"
-	"net/http"
-)
-
-type apiFunc func(http.ResponseWriter, *http.Request) error
-
 type ArticlesJSON struct {
 	Status string    `json:"status"`
 	Data   []Article `json:"data"`
@@ -34,13 +27,4 @@ type Article struct {
 
 type ApiError struct {
 	Error string `json:"error"`
-}
-
-func makeHTTPHandleFunc(f apiFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if err := f(w, r); err != nil {
-			fmt.Println("xd")
-			writeJSON(w, http.StatusBadRequest, ApiError{Error: err.Error()})
-		}
-	}
 }
