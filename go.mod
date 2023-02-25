@@ -1,4 +1,4 @@
-module github.com/xavimg/incrowd-test
+module github.com/xavimg/articles
 
 go 1.19
 
@@ -14,16 +14,12 @@ require (
 	github.com/xdg-go/stringprep v1.0.3 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20181117223130-1be2e3e5546d // indirect
 	golang.org/x/crypto v0.0.0-20220622213112-05595931fe9d // indirect
-	golang.org/x/sync v0.0.0-20220722155255-886fb9371eb4 // indirect
+	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
+	golang.org/x/text v0.3.7 // indirect
 )
 
 require (
-	github.com/antchfx/xmlquery v1.3.15 // indirect
-	github.com/antchfx/xpath v1.2.3 // indirect
 	github.com/go-chi/chi/v5 v5.0.8
-	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	go.mongodb.org/mongo-driver v1.11.2
-	golang.org/x/net v0.5.0 // indirect
-	golang.org/x/sys v0.4.0 // indirect
-	golang.org/x/text v0.6.0 // indirect
+	golang.org/x/sys v0.0.0-20220715151400-c0bba94af5f8 // indirect
 )

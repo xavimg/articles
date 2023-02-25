@@ -1,0 +1,38 @@
+version: '3'
+
+services:
+
+  articles-service:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    restart: always
+    ports:
+      - "4007:4007"
+    deploy:
+      mode: replicated
+      replicas: 1
+    networks:
+      - my_network
+    depends_on:
+      - mongo
+
+  mongo:
+    image: mongo:latest
+    container_name: mongodb_container
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin
+      MONGODB_DATABASE: articles
+    ports:
+      - 27017:27017
+    volumes:
+       - ./db-data/mongo/:/data/db
+    networks:
+      - my_network
+
+networks:
+  my_network:
+    driver: bridge
+

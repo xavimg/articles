@@ -1,6 +1,10 @@
 package models
 
-import "encoding/xml"
+import (
+	"encoding/xml"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
 
 type DataXMLALL struct {
 	XMLName             xml.Name `xml:"NewListInformation"`
@@ -65,15 +69,30 @@ type BodyAll struct {
 	IsPublished       string `json:"published"`
 }
 
+// type Article struct {
+// 	ID                primitive.ObjectID `bson:"_id,omitempty"`
+// 	ArticleURL        string             `json:"articleURL"`
+// 	NewsArticleID     string             `json:"newsArticleID"`
+// 	PublishDate       string             `json:"publishDate"`
+// 	Taxonomies        string             `json:"taxonomies"`
+// 	TeaserText        string             `json:"teaserText"`
+// 	ThumbnailImageURL string             `json:"thumbnailImageURL"`
+// 	Title             string             `json:"title"`
+// 	OptaMatchId       string             `json:"optaMatchID"`
+// 	LastUpdateDate    string             `json:"lastUpdateDate"`
+// 	IsPublished       string             `json:"published"`
+// }
+
 type Article struct {
-	ArticleURL        string `json:"articleURL"`
-	NewsArticleID     string `json:"newsArticleID"`
-	PublishDate       string `json:"publishDate"`
-	Taxonomies        string `json:"taxonomies"`
-	TeaserText        string `json:"teaserText"`
-	ThumbnailImageURL string `json:"thumbnailImageURL"`
-	Title             string `json:"title"`
-	OptaMatchId       string `json:"optaMatchID"`
-	LastUpdateDate    string `json:"lastUpdateDate"`
-	IsPublished       string `json:"published"`
+	ID                primitive.ObjectID `bson:"_id,omitempty"`
+	ArticleURL        string             `bson:"articleURL,omitempty"`
+	NewsArticleID     string             `bson:"newsArticleID,omitempty"`
+	PublishDate       string             `bson:"publishDate,omitempty"`
+	Taxonomies        string             `bson:"taxonomies,omitempty"`
+	TeaserText        string             `bson:"teaserText,omitempty"`
+	ThumbnailImageURL string             `bson:"thumbnailImageURL,omitempty"`
+	Title             string             `bson:"title,omitempty"`
+	OptaMatchId       string             `bson:"optaMatchID,omitempty"`
+	LastUpdateDate    string             `bson:"lastUpdateDate,omitempty"`
+	IsPublished       string             `bson:"published,omitempty"`
 }
