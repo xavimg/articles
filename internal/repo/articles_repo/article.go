@@ -2,9 +2,12 @@ package articles_repo
 
 import (
 	"context"
+	"fmt"
+	"log"
 
 	"github.com/sirupsen/logrus"
 	"github.com/xavimg/articles/internal/models"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -31,22 +34,46 @@ func (as *ArticleRepository) InsertMany(ctx context.Context, articles []models.A
 	return nil
 }
 
+func (as *ArticleRepository) InsertOne(ctx context.Context, article *models.Article) error {
+	collection := as.db.Collection("articles")
+
+	_, err := collection.InsertOne(ctx, article)
+	if err != nil {
+		logrus.Println(err)
+	}
+	return nil
+}
+
 func (as *ArticleRepository) GetAll(ctx context.Context) ([]models.Article, error) {
 	cursor, err := as.db.Collection("articles").Find(ctx, map[string]any{})
 	if err != nil {
+		logrus.Println("error: ", err)
 		return nil, err
 	}
+	defer cursor.Close(ctx)
 
-	articles := make([]models.Article, 0, 10)
-	if err := cursor.All(ctx, articles); err != nil {
-		return nil, err
+	var articles []models.Article
+	for cursor.Next(context.Background()) {
+		var article models.Article
+		if err := cursor.Decode(&article); err != nil {
+			log.Fatal(err)
+		}
+		articles = append(articles, article)
+		fmt.Println(article)
+	}
+	if err := cursor.Err(); err != nil {
+		log.Fatal(err)
 	}
 
 	return articles, nil
 }
 
 func (as *ArticleRepository) GetByID(ctx context.Context, id string) (*models.Article, error) {
-	return nil, nil
+	var article *models.Article
+	if err := as.db.Collection("articles").FindOne(ctx, bson.M{"_id": id}).Decode(&article); err != nil {
+		log.Fatal(err)
+	}
+	return article, nil
 }
 
 // func fromModel(in *models.Article) *models.Article {

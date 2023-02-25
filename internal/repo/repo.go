@@ -8,6 +8,7 @@ import (
 
 type Repo interface {
 	InsertMany(context.Context, []models.Article) error
+	InsertOne(context.Context, *models.Article) error
 	GetAll(context.Context) ([]models.Article, error)
 	GetByID(context.Context, string) (*models.Article, error)
 }

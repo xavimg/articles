@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"encoding/xml"
-	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -13,11 +12,13 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/xavimg/articles/internal/models"
 	"github.com/xavimg/articles/internal/repo"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 const (
-	host     = "www.wearehullcity.co.uk"
-	endpoint = "/api/incrowd/getnewlistinformation"
+	host         = "www.wearehullcity.co.uk"
+	endpointList = "/api/incrowd/getnewlistinformation"
+	endpointOne  = "/api/incrowd/getnewsarticleinformation"
 )
 
 type Server struct {
@@ -34,58 +35,34 @@ func NewServer(addr string, aRepo repo.Repo) *Server {
 
 func (s *Server) Run() {
 	router := chi.NewRouter()
-	router.Get("/articles/{count}", makeHTTPHandleFunc(s.All))
-	router.Get("/article/{id}", makeHTTPHandleFunc(s.ByID))
+	router.Get("/teams/t94/news/{count}", makeHTTPHandleFunc(s.All))
+	router.Get("/teams/t94/news/{id}", makeHTTPHandleFunc(s.ByID))
 
 	http.ListenAndServe(s.listenAddr, router)
 }
 
 func (ah *Server) All(w http.ResponseWriter, r *http.Request) error {
-	// count := chi.URLParam(r, "count")
-	fmt.Println("xd")
+	count := chi.URLParam(r, "count")
+
 	// Fetch coming from provider-feed.
-	// providerArticles, err := providerArticles(count)
-	// if err != nil {
-	// Alternative fetch if our provider-feed fails.
-	savedArticles, err := ah.repo.GetAll(context.Background())
-	if err != nil {
-		logrus.Printf("err %s\n", err)
-		return err
-	}
-	logrus.Println(err)
-	// return writeJSON(w, http.StatusOK, savedArticles)
-	// }
+	// var savedArticles []models.Article
+	if count == "5" {
+		providerArticles, err := providerArticles(count)
+		if err != nil {
+			// Alternative fetch if our provider-feed fails.
+			// savedArticles, err = ah.repo.GetAll(context.Background())
+			// if err != nil {
+			// 	logrus.Printf("err %s\n", err)
+			// 	return err
+			// }
+			// logrus.Println(err)
+			// return writeJSON(w, http.StatusOK, savedArticles)
+		}
 
-	// insertArticles := []models.Article{}
-	// for _, article := range providerArticles.Data {
-	// 	insertArticles = append(insertArticles, models.Article{
-	// 		ID:                primitive.NewObjectID(),
-	// 		ArticleURL:        article.ArticleURL,
-	// 		NewsArticleID:     article.NewsArticleID,
-	// 		PublishDate:       article.PublishDate,
-	// 		Taxonomies:        article.Taxonomies,
-	// 		TeaserText:        article.TeaserText,
-	// 		ThumbnailImageURL: article.ThumbnailImageURL,
-	// 		Title:             article.Title,
-	// 		OptaMatchId:       article.OptaMatchId,
-	// 		LastUpdateDate:    article.LastUpdateDate,
-	// 		IsPublished:       article.IsPublished,
-	// 	})
-	// }
-
-	// go func() error {
-	// 	if err := ah.repo.InsertMany(context.Background(), insertArticles); err != nil {
-	// 		logrus.Println(err)
-	// 		return err
-	// 	}
-	// 	return nil
-	// }()
-
-	var resp ArticleJSON
-	for _, article := range savedArticles {
-		resp = ArticleJSON{
-			Status: "succes",
-			Data: Article{
+		insertArticles := []models.Article{}
+		for _, article := range providerArticles.Data {
+			insertArticles = append(insertArticles, models.Article{
+				ID:                primitive.NewObjectID(),
 				ArticleURL:        article.ArticleURL,
 				NewsArticleID:     article.NewsArticleID,
 				PublishDate:       article.PublishDate,
@@ -96,42 +73,103 @@ func (ah *Server) All(w http.ResponseWriter, r *http.Request) error {
 				OptaMatchId:       article.OptaMatchId,
 				LastUpdateDate:    article.LastUpdateDate,
 				IsPublished:       article.IsPublished,
-			},
+			})
 		}
 
-	}
+		go func() error {
+			if err := ah.repo.InsertMany(context.Background(), insertArticles); err != nil {
+				logrus.Println(err)
+				return err
+			}
+			return nil
+		}()
+		return writeJSON(w, http.StatusOK, providerArticles)
 
-	return writeJSON(w, http.StatusOK, resp)
+	} else {
+		savedArticles, err := ah.repo.GetAll(context.Background())
+		if err != nil {
+			logrus.Printf("err %s\n", err)
+			return err
+		}
+
+		var resp ArticlesJSON
+		for _, article := range savedArticles {
+			resp = ArticlesJSON{Status: "succes"}
+			resp.Data = append(resp.Data, Article{
+				ArticleURL:        article.ArticleURL,
+				NewsArticleID:     article.NewsArticleID,
+				PublishDate:       article.PublishDate,
+				Taxonomies:        article.Taxonomies,
+				TeaserText:        article.TeaserText,
+				ThumbnailImageURL: article.ThumbnailImageURL,
+				Title:             article.Title,
+				OptaMatchId:       article.OptaMatchId,
+				LastUpdateDate:    article.LastUpdateDate,
+				IsPublished:       article.IsPublished,
+			})
+		}
+
+		return writeJSON(w, http.StatusOK, resp)
+	}
 }
 
 func (ah *Server) ByID(w http.ResponseWriter, r *http.Request) error {
-	count := chi.URLParam(r, "count")
+	id := chi.URLParam(r, "id")
 
-	// Show which come from feed provider.
-	var articles []Article
-	providerArticles, err := providerArticles(count)
-	if err != nil {
-		repoArticles, err := ah.repo.GetAll(context.Background())
+	// Fetch coming from provider-feed.
+	// var savedArticle models.Article
+	if id == "5" {
+		providerArticle, err := providerArticle(id)
 		if err != nil {
+		}
+
+		insertArticles := &models.Article{
+			ID:                primitive.NewObjectID(),
+			ArticleURL:        providerArticle.Data.ArticleURL,
+			NewsArticleID:     providerArticle.Data.NewsArticleID,
+			PublishDate:       providerArticle.Data.PublishDate,
+			Taxonomies:        providerArticle.Data.Taxonomies,
+			TeaserText:        providerArticle.Data.TeaserText,
+			ThumbnailImageURL: providerArticle.Data.ThumbnailImageURL,
+			Title:             providerArticle.Data.Title,
+			OptaMatchId:       providerArticle.Data.OptaMatchId,
+			LastUpdateDate:    providerArticle.Data.LastUpdateDate,
+			IsPublished:       providerArticle.Data.IsPublished,
+		}
+
+		go func() error {
+			if err := ah.repo.InsertOne(context.Background(), insertArticles); err != nil {
+				logrus.Println(err)
+				return err
+			}
+			return nil
+		}()
+		return writeJSON(w, http.StatusOK, providerArticles)
+
+	} else {
+		savedArticle, err := ah.repo.GetByID(context.Background(), id)
+		if err != nil {
+			logrus.Printf("err %s\n", err)
 			return err
 		}
-		for _, article := range repoArticles {
-			articles = append(articles, Article{
-				ArticleURL:    article.ArticleURL,
-				NewsArticleID: article.NewsArticleID,
-			})
+
+		resp := &ArticleJSON{
+			Status: "Succes",
+			Data: Article{
+				ArticleURL:        savedArticle.ArticleURL,
+				PublishDate:       savedArticle.PublishDate,
+				Taxonomies:        savedArticle.Taxonomies,
+				TeaserText:        savedArticle.TeaserText,
+				ThumbnailImageURL: savedArticle.ThumbnailImageURL,
+				Title:             savedArticle.Title,
+				OptaMatchId:       savedArticle.OptaMatchId,
+				LastUpdateDate:    savedArticle.LastUpdateDate,
+				IsPublished:       savedArticle.IsPublished,
+			},
 		}
+
+		return writeJSON(w, http.StatusOK, resp)
 	}
-
-	// ah.store.Insert()
-
-	providerArticles.Status = "Succes"
-	providerArticles.Data = articles
-	// response := {
-	// 	Status: "succes",
-	// 	Data:   articles,
-	// }
-	return writeJSON(w, http.StatusOK, providerArticles)
 }
 
 type apiFunc func(http.ResponseWriter, *http.Request) error
@@ -158,7 +196,7 @@ func providerArticles(count string) (*ArticlesJSON, error) {
 	url := &url.URL{
 		Scheme:   "https",
 		Host:     host,
-		Path:     endpoint,
+		Path:     endpointList,
 		RawQuery: params.Encode(),
 	}
 	resp, err := http.Get(url.String())
@@ -207,27 +245,35 @@ func providerArticles(count string) (*ArticlesJSON, error) {
 	return responsejson, nil
 }
 
-func callOneItemByID() *models.DataJSONOne {
-	resp, err := http.Get("https://www.wearehullcity.co.uk/api/incrowd/getnewsarticleinformation?id=443426")
+func providerArticle(id string) (*ArticleJSON, error) {
+	params := url.Values{}
+	params.Add("id", id)
+	url := &url.URL{
+		Scheme:   "https",
+		Host:     host,
+		Path:     endpointList,
+		RawQuery: params.Encode(),
+	}
+	resp, err := http.Get(url.String())
 	if err != nil {
 		logrus.Printf("Error %s", err)
-		return nil
+		return nil, err
 	}
 
 	respByte, err := io.ReadAll(resp.Body)
 	if err != nil {
 		logrus.Printf("Error %s", err)
-		return nil
+		return nil, err
 	}
 	defer resp.Body.Close()
 
 	var dataClean models.DataXMLOne
 	if err := xml.Unmarshal(respByte, &dataClean); err != nil {
 		logrus.Printf("Error %s", err)
-		return nil
+		return nil, err
 	}
 
-	body := models.Article{
+	body := Article{
 		ArticleURL:        dataClean.NewsletterNewsItem.ArticleURL,
 		NewsArticleID:     dataClean.NewsletterNewsItem.NewsArticleID,
 		PublishDate:       dataClean.NewsletterNewsItem.PublishDate,
@@ -239,10 +285,10 @@ func callOneItemByID() *models.DataJSONOne {
 		LastUpdateDate:    dataClean.NewsletterNewsItem.LastUpdateDate,
 		IsPublished:       dataClean.NewsletterNewsItem.IsPublished,
 	}
-	responsejson := &models.DataJSONOne{
+	responsejson := &ArticleJSON{
 		Status: "succes",
 		Data:   body,
 	}
 
-	return responsejson
+	return responsejson, nil
 }
