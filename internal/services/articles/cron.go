@@ -6,42 +6,52 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"time"
 
 	"github.com/sirupsen/logrus"
 	"github.com/xavimg/articles/internal/models"
 )
 
+const (
+	host         = "www.wearehullcity.co.uk"
+	endpointList = "/api/incrowd/getnewlistinformation"
+	endpointOne  = "/api/incrowd/getnewsarticleinformation"
+)
+
 func PollingNews() {
+	logrus.Info("New polling at %v", time.Now())
+
 	params := url.Values{}
-	params.Add("count", "2")
+	params.Add("count", "5") // He de hardcoldearlo porque nose como hacero dinámico
 	url := &url.URL{
 		Scheme:   "https",
 		Host:     host,
 		Path:     endpointList,
 		RawQuery: params.Encode(),
 	}
-	resp, err := http.Get(url.String())
+
+	res, err := http.Get(url.String())
 	if err != nil {
 		logrus.Printf("Error %s", err)
 		return
 	}
 
-	respByte, err := io.ReadAll(resp.Body)
+	resByte, err := io.ReadAll(res.Body)
 	if err != nil {
 		logrus.Printf("Error %s", err)
 		return
 	}
-	defer resp.Body.Close()
+	defer res.Body.Close()
 
-	var dataClean models.DataXMLALL
-	if err := xml.Unmarshal(respByte, &dataClean); err != nil {
+	var providerData DataXML
+	if err := xml.Unmarshal(resByte, &providerData); err != nil {
 		logrus.Printf("Error %s", err)
 		return
 	}
 
 	var article *models.Article
 	var articles []*models.Article
-	for _, item := range dataClean.NewsletterNewsItems.NewsletterNewsItem {
+	for _, item := range providerData.NewsletterNewsItems.NewsletterNewsItem {
 		article = &models.Article{
 			ArticleURL:        item.ArticleURL,
 			NewsArticleID:     item.NewsArticleID,

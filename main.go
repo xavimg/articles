@@ -24,13 +24,15 @@ func main() {
 		log.Panic(err)
 	}
 
-	s := gocron.NewScheduler()
-	s.Every(3).Seconds().Do(articles.PollingNews)
-	<-s.Start()
+	go func() {
+		s := gocron.NewScheduler()
+		s.Every(3).Seconds().Do(articles.PollingNews)
+		<-s.Start()
+	}()
 
 	router := chi.NewRouter()
 
-	go articles.NewServer(router)
+	articles.NewServer(router)
 
-	go logrus.Fatal(http.ListenAndServe(":4007", router))
+	logrus.Fatal(http.ListenAndServe(":4007", router))
 }
