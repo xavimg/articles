@@ -4,4 +4,6 @@ api:
 mongo:
   url: mongodb://mongo:27017
   database: articles
-  collection: articles
+
+feedprovider:
+  hullcity: https://www.wearehullcity.co.uk/api/incrowd

@@ -2,35 +2,32 @@ package main
 
 import (
 	"context"
-	"log"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/jasonlvhit/gocron"
 	"github.com/sirupsen/logrus"
 	"github.com/xavimg/articles/internal/config"
+	"github.com/xavimg/articles/internal/controllers"
 	"github.com/xavimg/articles/internal/models"
-	"github.com/xavimg/articles/internal/services/articles"
+	"github.com/xavimg/articles/internal/services"
 )
 
 func main() {
 	if err := config.LoadSettings(); err != nil {
-		log.Fatal(err)
+		logrus.Fatal(err)
 	}
 
-	ctx := context.Background()
-	if err := models.ConnectRepo(ctx); err != nil {
-		log.Fatal(err)
+	if err := models.ConnectRepo(context.Background()); err != nil {
+		logrus.Fatal(err)
 	}
 
-	go func() {
-		s := gocron.NewScheduler()
-		s.Every(3).Seconds().Do(articles.PollingNews)
-		<-s.Start()
-	}()
+	s := gocron.NewScheduler()
+	s.Every(3).Seconds().Do(services.PollingNews)
+	s.Start()
 
 	router := chi.NewRouter()
-	articles.NewServer(router)
+	controllers.NewServer(router)
 
 	logrus.Fatal(http.ListenAndServe(":4007", router))
 }

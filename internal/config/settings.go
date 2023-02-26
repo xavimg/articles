@@ -10,8 +10,9 @@ import (
 var Settings SettingsRoot
 
 type SettingsRoot struct {
-	Api   Api   `yml:"api"`
-	Mongo Mongo `yml:"mongo"`
+	Api          Api          `yml:"api"`
+	Mongo        Mongo        `yml:"mongo"`
+	FeedProvider FeedProvider `yml:"feedprovider"`
 }
 
 type Api struct {
@@ -19,9 +20,12 @@ type Api struct {
 }
 
 type Mongo struct {
-	URL        string `yml:"url"`
-	Database   string `yml:"database"`
-	Collection string `yml:"collection"`
+	URL      string `yml:"url"`
+	Database string `yml:"database"`
+}
+
+type FeedProvider struct {
+	HullCity string `yml:"hullcity"`
 }
 
 func LoadSettings() error {

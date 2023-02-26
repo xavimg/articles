@@ -7,7 +7,7 @@ services:
       context: .
       dockerfile: ./Dockerfile
     environment:
-      CONFIG_FILE: config/config.yml
+      CONFIG_FILE: ./config/config.yml
     ports:
       - "4007:4007"
     deploy:
@@ -21,7 +21,6 @@ services:
   mongo:
     image: mongo:latest
     container_name: mongodb_container
-    restart: always
     environment:
       MONGODB_DATABASE: articles
     ports:

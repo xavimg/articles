@@ -2,7 +2,6 @@ package models
 
 import (
 	"context"
-	"log"
 
 	"github.com/sirupsen/logrus"
 	"github.com/xavimg/articles/internal/config"
@@ -10,6 +9,8 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+
+	"github.com/juju/errors"
 )
 
 var Repo *Database
@@ -17,8 +18,7 @@ var Repo *Database
 func ConnectRepo(ctx context.Context) error {
 	c, err := mongo.Connect(context.Background(), options.Client().ApplyURI(config.Settings.Mongo.URL))
 	if err != nil {
-		logrus.Errorf("Error connecting: %s\n", err)
-		return err
+		return errors.Trace(err)
 	}
 
 	Repo = &Database{
@@ -35,131 +35,109 @@ type Database struct {
 }
 
 func (repo *Database) Articles() *mongo.Collection {
-	return repo.mongo.Collection(config.Settings.Mongo.Collection)
+	return repo.mongo.Collection("articles")
 }
 
-func (repo *Database) GetAll(ctx context.Context) ([]*Article, error) {
-	cursor, err := Repo.Articles().Find(ctx, bson.D{})
+func (repo *Database) List(ctx context.Context, team string) ([]*Article, error) {
+	cursor, err := Repo.Articles().Find(ctx, bson.M{"teamId": team})
 	if err != nil {
-		logrus.Error(err)
-		return nil, err
+		return nil, errors.Trace(err)
 	}
 
-	var articles []*Article
-	for cursor.Next(context.Background()) {
+	articles := []*Article{}
+	for cursor.Next(ctx) {
 		var article *Article
 		if err := cursor.Decode(&article); err != nil {
-			logrus.Error(err)
-			return nil, err
+			return nil, errors.Trace(err)
 		}
 		articles = append(articles, article)
 	}
 	if err := cursor.Err(); err != nil {
-		logrus.Error(err)
-		return nil, err
+		return nil, errors.Trace(err)
+	}
+
+	if len(articles) == 0 {
+		return nil, errors.Trace(errors.NotFoundf("team %s", team))
 	}
 
 	return articles, nil
 }
 
-func (repo *Database) GetByID(ctx context.Context, id string) (*Article, error) {
-	var article Article
-
+func (repo *Database) Get(ctx context.Context, team, id string) (*Article, error) {
 	articleID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
-		log.Fatal(err)
-	}
-	if err := Repo.Articles().FindOne(ctx, bson.M{"_id": articleID}).Decode(&article); err != nil {
-		logrus.Error(err)
-		return nil, err
+		return nil, errors.Trace(err)
 	}
 
-	return &article, nil
+	article := &Article{}
+	filters := bson.M{"teamId": team, "_id": articleID}
+	if err := Repo.Articles().FindOne(ctx, filters).Decode(&article); err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return nil, errors.Trace(errors.NotFoundf(err.Error()))
+		}
+		return nil, errors.Trace(err)
+	}
+
+	return article, nil
 }
 
-func (repo *Database) InsertManyTask(ctx context.Context, articles []*Article) error {
-	cursor, err := Repo.Articles().Find(ctx, bson.M{})
-	if err != nil {
-		logrus.Error(err)
-		return err
+func (repo *Database) BatchCreate(ctx context.Context, articles []*Article) error {
+	externalIds := []string{}
+	for _, article := range articles {
+		externalIds = append(externalIds, article.NewsArticleID)
+	}
+
+	// All existent
+	cursor, err := Repo.Articles().Find(ctx, bson.M{"newsArticleID": bson.M{"$in": externalIds}})
+	if err != nil && !errors.Is(err, mongo.ErrNoDocuments) {
+		return errors.Trace(err)
 	}
 	defer cursor.Close(ctx)
 
-	var existingArticles []Article
+	existingArticles := []*Article{}
 	for cursor.Next(ctx) {
-		var article Article
+		article := &Article{}
 		if err := cursor.Decode(&article); err != nil {
-			logrus.Error(err)
-			return err
+			return errors.Trace(err)
 		}
 		existingArticles = append(existingArticles, article)
 	}
 	if err := cursor.Err(); err != nil {
-		logrus.Error(err)
-		return err
+		return errors.Trace(err)
 	}
 
-	var newArticles []interface{}
+	updates := []interface{}{}
+	creates := []interface{}{}
 	for _, article := range articles {
-		if !containsArticle(existingArticles, article) {
-			newArticles = append(newArticles, article)
+		if a := findArticle(existingArticles, article); a != nil {
+			if !a.LastUpdateDate.Equal(article.LastUpdateDate) {
+				updates = append(updates, article)
+			}
+			continue
+		}
+		creates = append(creates, article)
+	}
+
+	if len(updates) > 0 {
+		if _, err = Repo.Articles().UpdateOne(ctx, bson.M{"newsArticleID": bson.M{"$in": externalIds}}, updates); err != nil {
+			return errors.Trace(err)
 		}
 	}
-
-	if len(newArticles) > 0 {
-		_, err = Repo.Articles().InsertMany(ctx, newArticles)
-		if err != nil {
-			logrus.Error(err)
-			return err
+	if len(creates) > 0 {
+		if _, err = Repo.Articles().InsertMany(ctx, creates); err != nil {
+			return errors.Trace(err)
 		}
 	}
 
 	return nil
 }
 
-func containsArticle(articles []Article, article *Article) bool {
+func findArticle(articles []*Article, article *Article) *Article {
 	for _, a := range articles {
 		if a.NewsArticleID == article.NewsArticleID {
-			return true
+			return a
 		}
 	}
-	return false
-}
 
-func (repo *Database) InsertOne(ctx context.Context, article *Article) error {
-	if _, err := Repo.Articles().InsertOne(ctx, article); err != nil {
-		logrus.Error(err)
-		return err
-	}
 	return nil
 }
-
-// func fromModel(in *models.Article) *models.Article {
-// 	return &Article{
-// 		ArticleURL:        in.ArticleURL,
-// 		NewsArticleID:     in.NewsArticleID,
-// 		PublishDate:       in.PublishDate,
-// 		Taxonomies:        in.Taxonomies,
-// 		TeaserText:        in.TeaserText,
-// 		ThumbnailImageURL: in.ThumbnailImageURL,
-// 		Title:             in.Title,
-// 		OptaMatchId:       in.OptaMatchId,
-// 		LastUpdateDate:    in.LastUpdateDate,
-// 		IsPublished:       in.IsPublished,
-// 	}
-// }
-
-// func toModel(in Article) *models.Article {
-// 	return &models.Article{
-// 		ArticleURL:        in.ArticleURL,
-// 		NewsArticleID:     in.NewsArticleID,
-// 		PublishDate:       in.PublishDate,
-// 		Taxonomies:        in.Taxonomies,
-// 		TeaserText:        in.TeaserText,
-// 		ThumbnailImageURL: in.ThumbnailImageURL,
-// 		Title:             in.Title,
-// 		OptaMatchId:       in.OptaMatchId,
-// 		LastUpdateDate:    in.LastUpdateDate,
-// 		IsPublished:       in.IsPublished,
-// 	}
-// }
