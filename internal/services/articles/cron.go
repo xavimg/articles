@@ -25,7 +25,7 @@ const (
 	teamId = "t94"
 )
 
-// PollingNews:
+// PollingNews
 //  1. Fetch XML data from getnewlistinformation.
 //  2. Transform that data XML data into Golang model structure for MongoDB. Create array of strings externalIds, and insert the id articl'es from data provider.
 //  3. List the existing articles from MongoDB passing by parameter teamId and externalIds
@@ -115,16 +115,6 @@ func PollingNews() {
 	return
 }
 
-func findArticle(articles []*models.Article, article *models.Article) *models.Article {
-	for _, a := range articles {
-		if a.NewsArticleID == article.NewsArticleID {
-			return a
-		}
-	}
-
-	return nil
-}
-
 func listArticles() (*dtos.NewListInformation, error) {
 	url := fmt.Sprintf("%s/%s?count=%s", config.Settings.FeedProvider.HullCity, endpointList, count)
 	providerData := &dtos.NewListInformation{}
@@ -169,6 +159,16 @@ func call(url string, reply interface{}) error {
 	if err := xml.Unmarshal([]byte(resBytes), &reply); err != nil {
 		logrus.Error(errors.Trace(err))
 		return err
+	}
+
+	return nil
+}
+
+func findArticle(articles []*models.Article, article *models.Article) *models.Article {
+	for _, a := range articles {
+		if a.NewsArticleID == article.NewsArticleID {
+			return a
+		}
 	}
 
 	return nil

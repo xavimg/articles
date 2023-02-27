@@ -15,7 +15,7 @@ import (
 
 var Repo *Database
 
-// ConnectRepo will connect our server to any DB we opened the connection. Example: PostgreSQL snippet code
+// ConnectRepo will connect our server to any DB we opened the connection.
 func ConnectRepo(ctx context.Context) error {
 	mongo, err := mongo.Connect(context.Background(), options.Client().ApplyURI(config.Settings.Mongo.URL))
 	if err != nil {
