@@ -51,11 +51,11 @@ curl --location --request GET 'localhost:4007/teams/t94/news'
 
 ### Request where t94 is param {team} and 63fbfb4d26d4bc535d953e2d is param {id} this id will change when when try it because is a unique mongo hex id. So use a new one generated
 
-curl --location --request GET 'localhost:4007/teams/t94/news/63fbfdf6d2eac311411c3b35'
+curl --location --request GET 'localhost:4007/teams/t94/news/63fc11a3135b323a684f0742'
 
 ### Response
 
-{"status":"succes","data":{"id":"63fbfdf6d2eac311411c3b35","teamId":"t94","articleURL":"https://www.wearehullcity.co.uk/news/2023/february/roseniors-bristol-city-reaction/","newsArticleID":"443849","publishDate":"2023-02-25T21:23:37Z","type":["Interviews"],"teaserText":"Liam Rosenior felt a sluggish start set the tone for Hull City’s narrow 1-0 loss at Bristol City.","thumbnailImageURL":"https://www.wearehullcity.co.uk/api/image/feedassets/4739df60-379a-4fdd-bd92-23de9026785c/Medium/liam-rosenior-bristol-city-a-feb-2023.jpg","title":"Rosenior’s Bristol City Reaction","optaMatchID":"g2300117","lastUpdateDate":"2023-02-25T21:33:19Z","published":true},"metadata":{"createdAt":"2023-02-27","totalItems":0,"sort":""}
+{"status":"succes","data":{"id":"63fc11a3135b323a684f0742","teamId":"t94","articleURL":"https://www.wearehullcity.co.uk/news/2023/february/roseniors-bristol-city-reaction/","newsArticleID":"443849","publishDate":"2023-02-25T21:23:37Z","type":["Interviews"],"teaserText":"Liam Rosenior felt a sluggish start set the tone for Hull City’s narrow 1-0 loss at Bristol City.","thumbnailImageURL":"https://www.wearehullcity.co.uk/api/image/feedassets/4739df60-379a-4fdd-bd92-23de9026785c/Medium/liam-rosenior-bristol-city-a-feb-2023.jpg","title":"Rosenior’s Bristol City Reaction","optaMatchID":"g2300117","lastUpdateDate":"2023-02-25T21:33:19Z","published":true},"metadata":{"createdAt":"2023-02-27T02:59:57.136305345Z"}
 
 ## Screenshots
 
