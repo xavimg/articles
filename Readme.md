@@ -1,11 +1,11 @@
 
-# Incrowd - Sports News 
+# Incrowd - Sports News
 
-Regarding the API implementation, I initially considered making direct calls to the provider feed data for each request, due to would be always the latest, and then if in any case they servers had issues, use mongoDB as our data provider. However, I recognized that this approach may not always be the fastest, due to the latency making httpRequest inside our endpoints,that could result in delays for our customers. As such, I decided to implement a second option where the data will be always consumed directly from our mongo database. This approach would ensure faster load times. By the way, if we would like real-time, for example providing info in real-time about a match for people who don't pay for Champions subscription, we would go for websockets.
+**We want to provide stability in new News by implementing cron-job calling external data feed and transforming data into consistent and desirable format that the app developers can consume, so that, as is often the case, when the external provider has issues we can still provide data to the apps, albeit stale data.**
 
-To address this, I implemented a cronjob that runs every 5-minute, which periodically updates the data in our mongo database. This approach balances the need for resource availability with the need to avoid overloading the provider feed API with too many requests. Instead, we want to strike a balance between freshness and efficiency, which is why we decided to use a 5-minute cron timer. As a general rule, it is recommended to limit the number of requests per minute to an external API to a reasonable number to avoid overloading the server or causing a denial of service (DoS) attack. Typically, most APIs have rate limiting policies in place to prevent excessive usage, and it is important to respect those limits to avoid getting banned or blocked. Since, I dont know the policies of data feed provider, I can't be more precisse in my decision.
+To address this, I implemented a cronjob that runs every 5-minute, which periodically updates the data in our mongoDB. This approach balances the need for resource availability with the need to avoid overloading the provider feed API with too many requests. Instead, we want to strike a balance between freshness and efficiency, which is why we decided to use a 5-minute cron timer. As a general rule, it is recommended to limit the number of requests per minute to an external API to a reasonable number to avoid overloading the server or causing a denial of service (DoS) attack. Typically, most APIs have rate limiting policies in place to prevent excessive usage, and it is important to respect those limits to avoid getting banned or blocked. Since, I dont know the policies of data feed provider, I can't be more accurate in my decision.
 
-The importance of this approach is illustrated by the example of Leo Messi returning to FC Barcelona. If our cron job is set to run every 30 min or 2 hours, there is a possibility that the news about Messi's return might not appear in our database, which would impact badly in our traffic and customer experience, and we dont want that in incrowd. To avoid this, we need to periodically update our database with fresh data from the provider feed API.
+The importance of this approach is illustrated by the hypothetical case of Leo Messi returning to FC Barcelona. If our cron job is set to run every 30 min or 2 hours, there is a possibility that the news about Messi's return might not appear in our database, which would impact badly in our traffic and customer experience, and we dont want that in incrowd. To avoid this, we need to periodically update our database with fresh data from the provider feed API.
 
 Overall, I believe that the approach I took to the technical test strikes a balance between efficiency, freshness, and customer satisfaction, and will be effective in meeting the needs of business.
  
@@ -26,7 +26,14 @@ Run this Makefile command:
 ```bash
   make up_build
 ```
+
 # REST API
+
+| Method   | URL                                      | Description                              |
+| -------- | ---------------------------------------- | ---------------------------------------- |
+| `GET`    | `/teams/{team}/news`                             | Retrieve all articles.           |
+| `GET`    | `/teams/{team}/news/{id}`                        | Retrieve one article.            |
+
 
 The REST API to the example app is described below.
 
@@ -44,11 +51,11 @@ curl --location --request GET 'localhost:4007/teams/t94/news'
 
 ### Request where t94 is param {team} and 63fbfb4d26d4bc535d953e2d is param {id} this id will change when when try it because is a unique mongo hex id. So use a new one generated
 
-curl --location --request GET 'localhost:4007/teams/t94/news/63fbfdf6d2eac311411c3b35'
+curl --location --request GET 'localhost:4007/teams/t94/news/63fc11a3135b323a684f0742'
 
 ### Response
 
-{"status":"succes","data":{"id":"63fbfdf6d2eac311411c3b35","teamId":"t94","articleURL":"https://www.wearehullcity.co.uk/news/2023/february/roseniors-bristol-city-reaction/","newsArticleID":"443849","publishDate":"2023-02-25T21:23:37Z","type":["Interviews"],"teaserText":"Liam Rosenior felt a sluggish start set the tone for Hull City’s narrow 1-0 loss at Bristol City.","thumbnailImageURL":"https://www.wearehullcity.co.uk/api/image/feedassets/4739df60-379a-4fdd-bd92-23de9026785c/Medium/liam-rosenior-bristol-city-a-feb-2023.jpg","title":"Rosenior’s Bristol City Reaction","optaMatchID":"g2300117","lastUpdateDate":"2023-02-25T21:33:19Z","published":true},"metadata":{"createdAt":"2023-02-27","totalItems":0,"sort":""}
+{"status":"succes","data":{"id":"63fc11a3135b323a684f0742","teamId":"t94","articleURL":"https://www.wearehullcity.co.uk/news/2023/february/roseniors-bristol-city-reaction/","newsArticleID":"443849","publishDate":"2023-02-25T21:23:37Z","type":["Interviews"],"teaserText":"Liam Rosenior felt a sluggish start set the tone for Hull City’s narrow 1-0 loss at Bristol City.","thumbnailImageURL":"https://www.wearehullcity.co.uk/api/image/feedassets/4739df60-379a-4fdd-bd92-23de9026785c/Medium/liam-rosenior-bristol-city-a-feb-2023.jpg","title":"Rosenior’s Bristol City Reaction","optaMatchID":"g2300117","lastUpdateDate":"2023-02-25T21:33:19Z","published":true},"metadata":{"createdAt":"2023-02-27T02:59:57.136305345Z"}
 
 ## Screenshots
 
