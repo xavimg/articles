@@ -18,18 +18,18 @@ func NewService() *Service {
 
 func serializeArticle(article *models.Article) *dtos.Article {
 	return &dtos.Article{
-		ID:                article.ID.Hex(),
-		TeamID:            article.TeamID,
-		ArticleURL:        article.ArticleURL,
-		NewsArticleID:     article.NewsArticleID,
-		PublishDate:       article.PublishDate,
-		Type:              article.Type,
-		TeaserText:        article.TeaserText,
-		ThumbnailImageURL: article.ThumbnailImageURL,
-		Title:             article.Title,
-		OptaMatchId:       article.OptaMatchId,
-		LastUpdateDate:    article.LastUpdateDate,
-		IsPublished:       article.IsPublished,
+		ID:          article.ID.Hex(),
+		TeamID:      article.TeamID,
+		OptaMatchId: article.OptaMatchId,
+		Title:       article.Title,
+		Type:        article.Type,
+		TeaserText:  article.TeaserText,
+		Content:     article.Content,
+		ArticleURL:  article.ArticleURL,
+		ImageUrl:    article.ArticleURL,
+		GalleryURLs: article.GalleryURLs,
+		VideoUrl:    article.VideoURL,
+		PublishDate: article.PublishDate,
 	}
 }
 

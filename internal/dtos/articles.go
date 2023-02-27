@@ -21,16 +21,19 @@ type Metadata struct {
 }
 
 type Article struct {
-	ID                string    `json:"id"`
-	TeamID            string    `json:"teamId"`
-	ArticleURL        string    `json:"articleURL"`
-	NewsArticleID     string    `json:"newsArticleID"`
-	PublishDate       time.Time `json:"publishDate"`
-	Type              []string  `json:"type"`
-	TeaserText        string    `json:"teaserText"`
-	ThumbnailImageURL string    `json:"thumbnailImageURL"`
-	Title             string    `json:"title"`
-	OptaMatchId       string    `json:"optaMatchID"`
-	LastUpdateDate    time.Time `json:"lastUpdateDate"`
-	IsPublished       bool      `json:"published"`
+	ID             string    `json:"id"`
+	TeamID         string    `json:"teamId"`
+	OptaMatchId    string    `json:"optaMatchID"`
+	Title          string    `json:"title"`
+	Type           []string  `json:"type"`
+	TeaserText     string    `json:"teaserText"`
+	Content        string    `json:"content"`
+	ArticleURL     string    `json:"articleURL"`
+	ImageUrl       string    `json:"imageUrl"`
+	GalleryURLs    []string  `json:"galletyUrls"`
+	VideoUrl       string    `json:"videoUrl"`
+	NewsArticleID  string    `json:"newsArticleID"`
+	PublishDate    time.Time `json:"publishDate"`
+	LastUpdateDate time.Time `json:"lastUpdateDate"`
+	IsPublished    bool      `json:"published"`
 }
