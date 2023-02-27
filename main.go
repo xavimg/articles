@@ -7,10 +7,11 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/jasonlvhit/gocron"
 	"github.com/sirupsen/logrus"
+
 	"github.com/xavimg/articles/internal/config"
-	"github.com/xavimg/articles/internal/controllers"
+	articles_controller "github.com/xavimg/articles/internal/controllers/articles"
 	"github.com/xavimg/articles/internal/models"
-	"github.com/xavimg/articles/internal/services"
+	articles_service "github.com/xavimg/articles/internal/services/articles"
 )
 
 func main() {
@@ -23,11 +24,12 @@ func main() {
 	}
 
 	s := gocron.NewScheduler()
-	s.Every(3).Seconds().Do(services.PollingNews)
+	if err := s.Every(12).Seconds().Do(articles_service.PollingNews); err != nil {
+		logrus.Fatal(err)
+	}
 	s.Start()
 
 	router := chi.NewRouter()
-	controllers.NewServer(router)
-
+	articles_controller.NewServer(router)
 	logrus.Fatal(http.ListenAndServe(":4007", router))
 }

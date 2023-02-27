@@ -1,7 +1,6 @@
 package dtos
 
 import (
-	"encoding/xml"
 	"time"
 )
 
@@ -22,7 +21,7 @@ type Article struct {
 	TeamID            string    `json:"teamId"`
 	ArticleURL        string    `json:"articleURL"`
 	NewsArticleID     string    `json:"newsArticleID"`
-	PublishDate       string    `json:"publishDate"`
+	PublishDate       time.Time `json:"publishDate"`
 	Type              []string  `json:"type"`
 	TeaserText        string    `json:"teaserText"`
 	ThumbnailImageURL string    `json:"thumbnailImageURL"`
@@ -30,30 +29,4 @@ type Article struct {
 	OptaMatchId       string    `json:"optaMatchID"`
 	LastUpdateDate    time.Time `json:"lastUpdateDate"`
 	IsPublished       bool      `json:"published"`
-}
-
-type ArticleXML struct {
-	XMLName             xml.Name            `xml:"NewListInformation"`
-	ClubName            string              `xml:"ClubName"`
-	ClubWebsiteURL      string              `xml:"ClubWebsiteURL"`
-	NewsletterNewsItems NewsletterNewsItems `xml:"NewsletterNewsItems"`
-}
-
-type NewsletterNewsItems struct {
-	XMLName            xml.Name             `xml:"NewsletterNewsItems"`
-	NewsletterNewsItem []NewsletterNewsItem `xml:"NewsletterNewsItem"`
-}
-
-type NewsletterNewsItem struct {
-	XMLName           xml.Name `xml:"NewsletterNewsItem"`
-	ArticleURL        string   `xml:"ArticleURL"`
-	NewsArticleID     string   `xml:"NewsArticleID"`
-	PublishDate       string   `xml:"PublishDate"`
-	Taxonomies        []string `xml:"Taxonomies"`
-	TeaserText        string   `xml:"TeaserText"`
-	ThumbnailImageURL string   `xml:"ThumbnailImageURL"`
-	Title             string   `xml:"Title"`
-	OptaMatchId       string   `xml:"OptaMatchId"`
-	LastUpdates       string   `xml:"LastUpdateDate"`
-	IsPublished       bool     `xml:"IsPublished"`
 }

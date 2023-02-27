@@ -17,9 +17,9 @@ services:
       - my_network
     depends_on:
       - mongo
-
+ 
   mongo:
-    image: mongo:latest
+    image: mongo:4.2.16-bionic
     container_name: mongodb_container
     environment:
       MONGODB_DATABASE: articles
