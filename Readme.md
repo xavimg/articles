@@ -1,7 +1,7 @@
 
 # Incrowd - Sports News
 
-*We want to provide stability in new News by implementing cron-job calling external data feed and transforming into consistent and desirable format that the app developers can consume, so that, as is often the case, when the external provider has issues we can still provide data to the apps, albeit stale data.*
+**We want to provide stability in new News by implementing cron-job calling external data feed and transforming data into consistent and desirable format that the app developers can consume, so that, as is often the case, when the external provider has issues we can still provide data to the apps, albeit stale data.**
 
 To address this, I implemented a cronjob that runs every 5-minute, which periodically updates the data in our mongoDB. This approach balances the need for resource availability with the need to avoid overloading the provider feed API with too many requests. Instead, we want to strike a balance between freshness and efficiency, which is why we decided to use a 5-minute cron timer. As a general rule, it is recommended to limit the number of requests per minute to an external API to a reasonable number to avoid overloading the server or causing a denial of service (DoS) attack. Typically, most APIs have rate limiting policies in place to prevent excessive usage, and it is important to respect those limits to avoid getting banned or blocked. Since, I dont know the policies of data feed provider, I can't be more accurate in my decision.
 
