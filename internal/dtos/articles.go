@@ -1,8 +1,6 @@
 package dtos
 
-import (
-	"time"
-)
+import "time"
 
 type ListReply struct {
 	Status   string     `json:"status"`
@@ -17,9 +15,9 @@ type GetReply struct {
 }
 
 type Metadata struct {
-	CreatedAt  string `json:"createdAt"`
-	TotalItems int    `json:"totalItems"`
-	Sort       string `json:"sort"`
+	CreatedAt  time.Time `json:"createdAt"`
+	TotalItems int       `json:"totalItems,omitempty"`
+	Sort       string    `json:"sort,omitempty"`
 }
 
 type Article struct {

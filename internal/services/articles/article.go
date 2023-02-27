@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/juju/errors"
+
 	"github.com/xavimg/articles/internal/dtos"
 	"github.com/xavimg/articles/internal/models"
 )
@@ -41,9 +42,9 @@ func (ah *Service) List(ctx context.Context, teamId string) (*dtos.ListReply, er
 	reply := &dtos.ListReply{
 		Status: "succes",
 		Metadata: &dtos.Metadata{
-			CreatedAt:  time.Now().Format("2006-01-02"),
+			CreatedAt:  time.Now(),
 			TotalItems: len(articles),
-			Sort:       "desc",
+			Sort:       "-published", // It means we order articles in DESC way in repo package using --> options.Find().SetSort(bson.M{"lastUpdateDate": -1})
 		},
 	}
 	for _, article := range articles {
@@ -63,7 +64,7 @@ func (ah *Service) Get(ctx context.Context, teamId, id string) (*dtos.GetReply, 
 		Status: "succes",
 		Data:   serializeArticle(article),
 		Metadata: &dtos.Metadata{
-			CreatedAt: time.Now().Format("2006-01-02"),
+			CreatedAt: time.Now(),
 		},
 	}
 

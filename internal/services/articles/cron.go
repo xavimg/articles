@@ -10,6 +10,7 @@ import (
 
 	"github.com/juju/errors"
 	"github.com/sirupsen/logrus"
+
 	"github.com/xavimg/articles/internal/config"
 	"github.com/xavimg/articles/internal/dtos"
 	"github.com/xavimg/articles/internal/models"
@@ -19,16 +20,25 @@ const (
 	endpointList     = "getnewlistinformation"
 	endpointDetailed = "getnewsarticleinformation"
 
-	count = "50"
-
-	// We don't know the other teamId we should poll. So as example, I will use the t94 as refference, like the example.
+	// Using same variables as the example of Google Drive.
+	count  = "50"
 	teamId = "t94"
 )
 
+// PollingNews:
+//  1. Fetch XML data from getnewlistinformation.
+//  2. Transform that data XML data into Golang model structure for MongoDB. Create array of strings externalIds, and insert the id articl'es from data provider.
+//  3. List the existing articles from MongoDB passing by parameter teamId and externalIds
+//  4. Once we have the existingArticles we can play with updates, for update articles checking LastUpdate; and creates, for create new ones when don't exists.
+//  5. We range the array of articles we parsed from XML to our model Golang structure, and for each article try to find by NewsArticleID. If the article is found,
+//     and LastUpdateDate is the same, it means we dont want update or insert. When the article is not found, we call getnewsarticleinformation, for insert the
+//     more detailed info such us content or galleryImgURL.
+//  6. If article exists, we will insert into the array of updates, if dont exist we will insert into array of creates.
+//  7. Finally, check the lenght of each array, and do the needed operation that can be ReplaceOne article, or InsertMany articles.
 func PollingNews() {
-	timeStart := time.Now()
-	ctx := context.Background()
 	logrus.Info("New polling at %v", time.Now())
+
+	ctx := context.Background()
 
 	providerData, err := listArticles()
 	if err != nil {
@@ -40,6 +50,7 @@ func PollingNews() {
 	articles := []*models.Article{}
 	for _, news := range providerData.NewsletterNewsItems.NewsletterNewsItem {
 		externalIds = append(externalIds, news.NewsArticleID)
+
 		articles = append(articles, &models.Article{
 			TeamID:            teamId,
 			ArticleURL:        news.ArticleURL,
@@ -88,18 +99,17 @@ func PollingNews() {
 		creates = append(creates, article)
 	}
 
-	elapsed := time.Since(timeStart)
-	fmt.Println("finish", elapsed)
-
 	if len(updates) > 0 {
-		models.Repo.ReplaceOne(ctx, updates)
-		elapsed := time.Since(timeStart)
-		fmt.Println("updated", elapsed)
+		if err := models.Repo.ReplaceOne(ctx, updates); err != nil {
+			logrus.Error(errors.Trace(err))
+			return
+		}
 	}
 	if len(creates) > 0 {
-		models.Repo.InsertMany(ctx, creates)
-		elapsed := time.Since(timeStart)
-		fmt.Println("insert", elapsed)
+		if err := models.Repo.InsertMany(ctx, creates); err != nil {
+			logrus.Error(errors.Trace(err))
+			return
+		}
 	}
 
 	return
@@ -131,6 +141,7 @@ func getArticle(id string) (*dtos.NewsArticleInformation, error) {
 	providerData := &dtos.NewsArticleInformation{}
 
 	if err := call(url, providerData); err != nil {
+		logrus.Error(errors.Trace(err))
 		return nil, err
 	}
 

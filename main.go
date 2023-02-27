@@ -23,8 +23,13 @@ func main() {
 		logrus.Fatal(err)
 	}
 
+	// This call is because for testing the test, and call our endpoint we will need data in mongoDB, and we don't
+	// want to wait the timer of our cron-task(5min). This 5 min wait to insert, only happends at first time, because
+	// cron will do every 5 min, and first time, will be after 5 min.
+	go articles_service.PollingNews()
+
 	s := gocron.NewScheduler()
-	if err := s.Every(12).Seconds().Do(articles_service.PollingNews); err != nil {
+	if err := s.Every(5).Minutes().Do(articles_service.PollingNews); err != nil {
 		logrus.Fatal(err)
 	}
 	s.Start()

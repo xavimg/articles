@@ -7,7 +7,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-var Settings SettingsRoot
+var Settings *SettingsRoot
 
 type SettingsRoot struct {
 	Api          Api          `yml:"api"`

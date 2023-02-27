@@ -15,14 +15,21 @@ import (
 
 var Repo *Database
 
+// ConnectRepo will connect our server to any DB we opened the connection. Example: PostgreSQL snippet code
 func ConnectRepo(ctx context.Context) error {
-	c, err := mongo.Connect(context.Background(), options.Client().ApplyURI(config.Settings.Mongo.URL))
+	mongo, err := mongo.Connect(context.Background(), options.Client().ApplyURI(config.Settings.Mongo.URL))
 	if err != nil {
 		return errors.Trace(err)
 	}
 
+	// example:
+	//postgres, err := postgres.Open(...)
+
 	Repo = &Database{
-		mongo: c.Database(config.Settings.Mongo.Database),
+		mongo: mongo.Database(config.Settings.Mongo.Database),
+
+		// example:
+		// postgres: postgres
 	}
 
 	logrus.Info("Connected to mongo!")
@@ -32,6 +39,8 @@ func ConnectRepo(ctx context.Context) error {
 
 type Database struct {
 	mongo *mongo.Database
+
+	// postgres *postgres.DB
 }
 
 func (repo *Database) Articles() *mongo.Collection {

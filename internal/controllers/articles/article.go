@@ -8,6 +8,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/juju/errors"
 	"github.com/sirupsen/logrus"
+
 	"github.com/xavimg/articles/internal/services/articles"
 )
 
@@ -29,27 +30,27 @@ func (s *Server) registerEndpoints(router *chi.Mux) {
 
 func (s *Server) List(w http.ResponseWriter, r *http.Request) {
 	team := chi.URLParam(r, "team")
-	articles, err := s.Service.List(context.Background(), team)
+	res, err := s.Service.List(context.Background(), team)
 	if err != nil {
 		logrus.Error(err)
 		errorResponse(w, err)
 		return
 	}
 
-	writeJSON(w, http.StatusOK, articles)
+	writeJSON(w, http.StatusOK, res)
 }
 
 func (s *Server) Get(w http.ResponseWriter, r *http.Request) {
 	team := chi.URLParam(r, "team")
 	id := chi.URLParam(r, "id")
-	article, err := s.Service.Get(context.Background(), team, id)
+	res, err := s.Service.Get(context.Background(), team, id)
 	if err != nil {
 		logrus.Error(err)
 		errorResponse(w, err)
 		return
 	}
 
-	writeJSON(w, http.StatusOK, article)
+	writeJSON(w, http.StatusOK, res)
 }
 
 func writeJSON(w http.ResponseWriter, status int, v any) {
@@ -71,6 +72,7 @@ func errorResponse(w http.ResponseWriter, err error) {
 
 	jujuErr, ok := err.(*errors.Err)
 	if !ok {
+		// jujuErr library not includes http.StatusInternalServerError, so we can't check it out in switch.
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(errorApi)
 		return
