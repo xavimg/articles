@@ -10,6 +10,12 @@ type ListReply struct {
 	Metadata *Metadata  `json:"metadata"`
 }
 
+type GetReply struct {
+	Status   string    `json:"status"`
+	Data     *Article  `json:"data"`
+	Metadata *Metadata `json:"metadata"`
+}
+
 type Metadata struct {
 	CreatedAt  string `json:"createdAt"`
 	TotalItems int    `json:"totalItems"`

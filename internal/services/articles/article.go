@@ -53,11 +53,19 @@ func (ah *Service) List(ctx context.Context, teamId string) (*dtos.ListReply, er
 	return reply, nil
 }
 
-func (ah *Service) Get(ctx context.Context, teamId, id string) (*dtos.Article, error) {
+func (ah *Service) Get(ctx context.Context, teamId, id string) (*dtos.GetReply, error) {
 	article, err := models.Repo.GetArticle(ctx, teamId, id)
 	if err != nil {
 		return nil, errors.Trace(err)
 	}
 
-	return serializeArticle(article), nil
+	reply := &dtos.GetReply{
+		Status: "succes",
+		Data:   serializeArticle(article),
+		Metadata: &dtos.Metadata{
+			CreatedAt: time.Now().Format("2006-01-02"),
+		},
+	}
+
+	return reply, nil
 }
