@@ -26,7 +26,14 @@ Run this Makefile command:
 ```bash
   make up_build
 ```
+
 # REST API
+
+| Method   | URL                                      | Description                              |
+| -------- | ---------------------------------------- | ---------------------------------------- |
+| `GET`    | `/teams/{team}/news`                             | Retrieve all articles.           |
+| `GET`    | `/teams/{team}/news/{id}`                        | Retrieve one article.            |
+
 
 The REST API to the example app is described below.
 
